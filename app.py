@@ -3,7 +3,7 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
 
@@ -13,7 +13,7 @@ LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN", "")
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
-order_count = 0
+TH_TZ = timezone(timedelta(hours=7))
 
 
 @app.route("/webhook", methods=["POST"])
@@ -29,19 +29,15 @@ def webhook():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    global order_count
-
     text = event.message.text.strip()
 
-    # รับเฉพาะข้อความจากกลุ่ม
     if event.source.type != "group":
         return
 
-    # ข้ามข้อความสั้นเกินไป
-    if len(text) < 3:
+    # รับเฉพาะข้อความที่ขึ้นต้นด้วย "สั่ง"
+    if not text.startswith("สั่ง"):
         return
 
-    # ดึงชื่อผู้ส่ง
     try:
         profile = line_bot_api.get_group_member_profile(
             event.source.group_id, event.source.user_id
@@ -50,12 +46,10 @@ def handle_message(event):
     except Exception:
         sender_name = "ไม่ทราบชื่อ"
 
-    order_count += 1
-    now = datetime.now().strftime("%H:%M")
+    now = datetime.now(TH_TZ).strftime("%H:%M")
 
-    # ตอบกลับในกลุ่ม
     reply = (
-        f"✅ รับออเดอร์ #{order_count} แล้วครับ!\n"
+        f"รับทราบครับ ขอบคุณครับ\n"
         f"👤 {sender_name}\n"
         f"🕐 {now}\n"
         f"📋 {text}"
