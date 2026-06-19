@@ -34,8 +34,7 @@ def handle_message(event):
     if event.source.type != "group":
         return
 
-    # รับเฉพาะข้อความที่ขึ้นต้นด้วย "สั่ง"
-    if not text.startswith("สั่ง"):
+    if len(text) < 2:
         return
 
     try:
