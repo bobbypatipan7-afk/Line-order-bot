@@ -29,34 +29,38 @@ def webhook():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    text = event.message.text.strip()
-
-    if event.source.type != "group":
-        return
-
-    if len(text) < 2:
-        return
-
     try:
-        profile = line_bot_api.get_group_member_profile(
-            event.source.group_id, event.source.user_id
+        text = event.message.text.strip()
+
+        if event.source.type != "group":
+            return
+
+        if len(text) < 2:
+            return
+
+        # ดึงชื่อ ถ้าไม่ได้ก็ใช้ค่าว่าง
+        try:
+            profile = line_bot_api.get_group_member_profile(
+                event.source.group_id, event.source.user_id
+            )
+            sender_name = profile.display_name
+        except Exception:
+            sender_name = "สมาชิก"
+
+        now = datetime.now(TH_TZ).strftime("%H:%M")
+
+        reply = (
+            f"รับทราบครับ ขอบคุณครับ\n"
+            f"👤 {sender_name}\n"
+            f"🕐 {now}\n"
+            f"📋 {text}"
         )
-        sender_name = profile.display_name
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=reply)
+        )
     except Exception:
-        sender_name = "ไม่ทราบชื่อ"
-
-    now = datetime.now(TH_TZ).strftime("%H:%M")
-
-    reply = (
-        f"รับทราบครับ ขอบคุณครับ\n"
-        f"👤 {sender_name}\n"
-        f"🕐 {now}\n"
-        f"📋 {text}"
-    )
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply)
-    )
+        pass
 
 
 if __name__ == "__main__":
